@@ -46,7 +46,7 @@ function consultarSaldo() {
             console.log(chalk.bgBlue.black(`O saldo da conta e: R$ ${conta.saldo}`))
             operacoes()
         }
-        else{
+        else {
             console.log(chalk.red('Conta nao encontrada, tente uma conta valida!'))
             consultarSaldo()
         }
@@ -78,7 +78,7 @@ function buildConta() {
         }
         else {
             fs.writeFileSync(`contas/${nomeConta}.json`, '{"saldo": 0}', (error) => console.log(chalk.red('Erro ao criar conta: ' + error)))
-            console.log(chalk.green('Conta criada com sucesso!'))
+            console.log(chalk.bgGreen.black('Conta criada com sucesso!'))
             operacoes()
         }
     }).catch((error) => {
@@ -109,6 +109,7 @@ function depositar() {
                     conta.saldo = conta.saldo + valorDeposito
                     let contaJSON = JSON.stringify(conta)
                     fs.writeFileSync(`contas/${nomeConta}.json`, contaJSON, (error) => { console.log(chalk.red('Erro ao depositar: ' + error)) })
+                    console.log(chalk.bgGreen.black(`Deposito efetuado com sucesso!`))
                     operacoes()
                 }
             })
@@ -122,5 +123,45 @@ function depositar() {
     })
 }
 function sacar() {
+    inquirer.prompt([{
+        type: 'input',
+        name: 'nomeConta',
+        message: 'Digite o nome da conta que deseja sacar'
+    }]).then(answer => {
+        let nomeConta = answer.nomeConta
+        if (fs.existsSync(`contas/${nomeConta}.json`)) {
+            let conta = JSON.parse(fs.readFileSync(`contas/${nomeConta}.json`))
+            if (conta.saldo <= 0) {
+                console.log(chalk.red('Operacao invalida, saldo insuficiente!'))
+            }
+            else {
+                inquirer.prompt([{
+                    type: 'input',
+                    name: 'valorSaque',
+                    message: 'Digite o valor que deseja sacar'
+                }]).then(answer => {
+                    if (answer.valorSaque <= 0) {
+                        console.log(chalk.red('valor de saque invalido, valor tem que ser acima de R$ 0,00 !'))
+                        sacar()
+                    }
+                    else {
+                        let valorSaque = parseFloat(answer.valorSaque)
+                        conta.saldo = conta.saldo - valorSaque
+                        let contaJSON = JSON.stringify(conta)
+                        fs.writeFileSync(`contas/${nomeConta}.json`, contaJSON)
+                        console.log(chalk.bgGreen.black(`Saque efetuado com sucesso!`))
+                        operacoes()
+                    }
+                }).catch((error) => {
+                    console.log(chalk.red(`Erro ao realizar o saque: ${error}`))
+                })
+            }
+        }
+        else {
+            console.log(chalk.red('Conta nao encontrada, digite uma conta valida!'))
+        }
 
+    }).catch((error) => {
+        console.log(chalk.red(`Erro ao sacar: ${error}`))
+    })
 }
