@@ -146,11 +146,17 @@ function sacar() {
                     }
                     else {
                         let valorSaque = parseFloat(answer.valorSaque)
-                        conta.saldo = conta.saldo - valorSaque
-                        let contaJSON = JSON.stringify(conta)
-                        fs.writeFileSync(`contas/${nomeConta}.json`, contaJSON)
-                        console.log(chalk.bgGreen.black(`Saque efetuado com sucesso!`))
-                        operacoes()
+                        if (valorSaque > conta.saldo) {
+                            console.log(chalk.red(`Operacao invalida, saldo insuficiente, tete outro valor!`))
+                            sacar()
+                        }
+                        else {
+                            conta.saldo = conta.saldo - valorSaque
+                            let contaJSON = JSON.stringify(conta)
+                            fs.writeFileSync(`contas/${nomeConta}.json`, contaJSON)
+                            console.log(chalk.bgGreen.black(`Saque efetuado com sucesso!`))
+                            operacoes()
+                        }
                     }
                 }).catch((error) => {
                     console.log(chalk.red(`Erro ao realizar o saque: ${error}`))
