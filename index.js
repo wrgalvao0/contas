@@ -3,7 +3,6 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 // modulos internos
 import fs from 'fs';
-import { error } from 'console';
 
 operacoes()
 
@@ -14,7 +13,7 @@ function operacoes() {
         message: 'Qual operação você deseja realizar?',
         choices: ['Criar conta', 'Consultar saldo', 'Depositar', 'Saque', 'Sair']
     }]).then((answer => {
-        let acao = answer['acao']
+        let acao = answer.acao
         console.log(acao)
         if (acao === 'Criar conta') {
             criarConta()
@@ -78,7 +77,38 @@ function buildConta() {
 }
 
 function depositar() {
-
+    inquirer.prompt([{
+        type: 'input',
+        name: 'nomeConta',
+        message: 'Digite o nome da conta que deseja depositar'
+    }]).then(answer => {
+        let nomeConta = answer.nomeConta
+        if (fs.existsSync(`contas/${nomeConta}.json`)) {
+            let conta = JSON.parse(fs.readFileSync(`contas/${nomeConta}.json`))
+            inquirer.prompt([{
+                type: 'input',
+                name: 'valorDeposito',
+                message: 'Digite o valor que deseja depositar'
+            }]).then((answer) => {
+                if (answer.valorDeposito <= 0) {
+                    console.log(chalk.red('Valor de desposito invalido, tente um valor acima de R$ 0,00 !'))
+                    depositar()
+                }
+                else {
+                    let valorDeposito = parseFloat(answer.valorDeposito)
+                    conta.saldo = conta.saldo + valorDeposito
+                    let contaJSON = JSON.stringify(conta)
+                    fs.writeFileSync(`contas/${nomeConta}.json`, contaJSON, (error) => { console.log(chalk.red('Erro ao depositar: ' + error)) })
+                }
+            })
+        }
+        else {
+            console.log(chalk.red('Conta nao encontrada, tente novamente!'))
+            depositar()
+        }
+    }).catch((error) => {
+        console.log(chalk.red(`Erro ao depositar: ${error}`))
+    })
 }
 
 function sacar() {
