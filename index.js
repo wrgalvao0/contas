@@ -2,7 +2,8 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 // modulos internos
-import fs from 'fs';
+import fs, { existsSync } from 'fs';
+import { error } from 'console';
 
 operacoes()
 
@@ -34,15 +35,24 @@ function operacoes() {
     })).catch((error) => console.log(error))
 }
 function consultarSaldo() {
-    if (saldo > 0) {
-        console.log(chalk.green(`Seu saldo é: R$ ${saldo}`))
-    }
-    else if (saldo < 0) {
-        console.log(chalk.red(`Seu saldo é negativo: R$ ${saldo}`))
-    }
-    else {
-        console.log(chalk.yellow(`Seu salo e ${saldo}`))
-    }
+    inquirer.prompt([{
+        type: 'input',
+        name: 'nomeConta',
+        message: 'Digite o nome da conta que deseja consultar'
+    }]).then(answer => {
+        let nomeConta = answer.nomeConta
+        if (existsSync(`contas/${nomeConta}.json`)) {
+            let conta = JSON.parse(fs.readFileSync(`contas/${nomeConta}.json`))
+            console.log(chalk.bgBlue.black(`O saldo da conta e: R$ ${conta.saldo}`))
+            operacoes()
+        }
+        else{
+            console.log(chalk.red('Conta nao encontrada, tente uma conta valida!'))
+            consultarSaldo()
+        }
+    }).catch((error) => {
+        console.log(chalk.red(`Erro ao consultar o saldo: ${error}`))
+    })
 }
 
 function criarConta() {
@@ -99,6 +109,7 @@ function depositar() {
                     conta.saldo = conta.saldo + valorDeposito
                     let contaJSON = JSON.stringify(conta)
                     fs.writeFileSync(`contas/${nomeConta}.json`, contaJSON, (error) => { console.log(chalk.red('Erro ao depositar: ' + error)) })
+                    operacoes()
                 }
             })
         }
@@ -110,7 +121,6 @@ function depositar() {
         console.log(chalk.red(`Erro ao depositar: ${error}`))
     })
 }
-
 function sacar() {
 
 }
